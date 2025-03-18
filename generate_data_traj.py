@@ -7,15 +7,22 @@ import numpy as np
 import torch
 import pickle
 import pathlib
+import ruamel.yaml as yaml
+import os
+import sys
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.append(parent_dir)
+dreamer_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), './dreamerv3-torch'))
+sys.path.append(dreamer_dir)
+import tools
 
 
-
-def gen_one_traj_img(x_min, x_max, y_min, y_max, u_max, dt, v, dpi, rand=-1):
+def gen_one_traj_img(x_min, x_max, y_min, y_max, u_max, radius, dt, v, dpi, rand=-1):
   x_max -= 0.1
   y_max -= 0.1
   x_min += 0.1
   y_min += 0.1
-  radius = 0.25
+  
   center = (0.0, 0.0)
   states = torch.zeros(3)
   while torch.abs(states[0]) < radius and torch.abs(states[1]) < radius:
@@ -90,11 +97,11 @@ def gen_one_traj_img(x_min, x_max, y_min, y_max, u_max, dt, v, dpi, rand=-1):
   
   return state_obs, acs, state_gt, img_obs, dones
 
-def generate_trajs(x_min, x_max, y_min, y_max, u_max, dt, v, num_pts, dpi):
+def generate_trajs(x_min, x_max, y_min, y_max, u_max, r, dt, v, num_pts, dpi):
   demos = []
   for i in range(num_pts):
     print('demo: ', i)
-    state_obs, acs, state_gt, img_obs, dones = gen_one_traj_img(x_min, x_max, y_min, y_max, u_max, dt, v, dpi)
+    state_obs, acs, state_gt, img_obs, dones = gen_one_traj_img(x_min, x_max, y_min, y_max, u_max, r, dt, v, dpi)
     demo = {}
     demo['obs'] = {'image': img_obs, 'state': state_obs, 'priv_state': state_gt}
     demo['actions'] = acs
@@ -114,20 +121,34 @@ def recursive_update(base, update):
 if __name__=='__main__':      
     parser = argparse.ArgumentParser()
    
+    config, remaining = parser.parse_known_args()
 
+    yaml = yaml.YAML(typ="safe", pure=True)
+    configs = yaml.load(
+        (pathlib.Path(sys.argv[0]).parent / "./dreamerv3-torch/configs.yaml").read_text()
+    )
 
+    name_list = ["defaults"]
 
+    defaults = {}
+    for name in name_list:
+        recursive_update(defaults, configs[name])
+    parser = argparse.ArgumentParser()
+    for key, value in sorted(defaults.items(), key=lambda x: x[0]):
+        arg_type = tools.args_type(value)
+        parser.add_argument(f"--{key}", type=arg_type, default=arg_type(value))
+    final_config = parser.parse_args(remaining)
 
-    
-    num_pts =  2000 #config['num_pts']
-    x_min = -1.1
-    x_max = 1.1
-    y_min = -1.1
-    y_max = 1.1
+    num_pts =  final_config.num_pts
+    x_min = final_config.x_min
+    x_max = final_config.x_max
+    y_min = final_config.y_min
+    y_max = final_config.y_max
 
-    u_max = 1.1
-    dt = 0.05
-    v = 0.6
+    u_max = final_config.turnRate
+    dt = final_config.dt
+    v = final_config.speed
+    r = final_config.obs_r
 
-    dpi = 128
-    demos = generate_trajs(x_min, x_max, y_min, y_max, u_max, dt, v, num_pts, dpi)
+    dpi = final_config.size[0]
+    demos = generate_trajs(x_min, x_max, y_min, y_max, u_max, r, dt, v, num_pts, dpi)

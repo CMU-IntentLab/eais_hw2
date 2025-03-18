@@ -320,15 +320,15 @@ class Dreamer(nn.Module):
         """Captures an image of the current state of the environment."""
         # For simplicity, we create a blank image. In practice, this should render the environment.
         fig,ax = plt.subplots()
-        plt.xlim([-1.1, 1.1])
-        plt.ylim([-1.1, 1.1])
+        plt.xlim([self._config.x_min,self._config.x_max])
+        plt.ylim([self._config.y_min,self._config.y_max])
         plt.axis('off')
         fig.set_size_inches( 1, 1 )
         # Create the circle patch
-        circle = patches.Circle([0,0], 0.25, edgecolor=(1,0,0), facecolor='none')
+        circle = patches.Circle([0,0], self._config.obs_r, edgecolor=(1,0,0), facecolor='none')
         # Add the circle patch to the axis
-        dt = 0.05
-        v = 0.6
+        dt = self._config.dt
+        v = self._config.speed
         ax.add_patch(circle)
         
         plt.quiver(state[0], state[1], dt*v*np.cos(state[2]), dt*v*np.sin(state[2]), angles='xy', scale_units='xy', minlength=0,width=0.05, scale=0.2,color=(0,0,1), zorder=3)
@@ -364,7 +364,7 @@ class Dreamer(nn.Module):
             x = xs[idx[0]]
             y = ys[idx[1]]
             theta = thetas[idx[2]]
-            if (x**2 + y**2) < (0.25**2):
+            if (x**2 + y**2) < (self._config.obs_r**2):
                 labels.append(1) # unsafe
             else:
                 labels.append(0) # safe
@@ -406,7 +406,7 @@ class Dreamer(nn.Module):
             ax = axes[i, 0]
             im = ax.imshow(
                 v[:, :, i].T, interpolation='none', extent=np.array([
-                -1.1, 1.1, -1.1,1.1, ]), origin="lower",
+                self._config.x_min, self._config.x_max, self._config.y_min, self._config.y_max, ]), origin="lower",
                 cmap="seismic", vmin=vmin, vmax=vmax, zorder=-1
             )
             cbar = fig.colorbar(
@@ -418,7 +418,7 @@ class Dreamer(nn.Module):
             ax = axes[i, 1]
             im = ax.imshow(
                 v[:, :, i].T > 0, interpolation='none', extent=np.array([
-                -1.1, 1.1, -1.1,1.1, ]), origin="lower",
+                self._config.x_min, self._config.x_max, self._config.y_min, self._config.y_max, ]), origin="lower",
                 cmap="seismic", vmin=-1, vmax=1, zorder=-1
             )
             cbar = fig.colorbar(
@@ -427,12 +427,12 @@ class Dreamer(nn.Module):
             cbar.ax.set_yticklabels(labels=[vmin, 0, vmax], fontsize=24)
             ax.set_title(r'$v(x)$', fontsize=18)
             fig.tight_layout()
-            circle = plt.Circle((0, 0), 0.25, fill=False, color='blue', label = 'GT boundary')
+            circle = plt.Circle((0, 0), self._config.obs_r, fill=False, color='blue', label = 'GT boundary')
 
             # Add the circle to the plot
             axes[i,0].add_patch(circle)
             axes[i,0].set_aspect('equal')
-            circle2 = plt.Circle((0, 0), 0.25, fill=False, color='blue', label = 'GT boundary')
+            circle2 = plt.Circle((0, 0), self._config.obs_r, fill=False, color='blue', label = 'GT boundary')
 
             axes[i,1].add_patch(circle2)
             axes[i,1].set_aspect('equal')
@@ -456,7 +456,7 @@ class Dreamer(nn.Module):
         wm.dynamics.sample = False
         actor = self._task_behavior.actor
         data = wm.preprocess(data)
-        R = 0.25
+        R = self._config.obs_r
         with tools.RequiresGrad(lx_mlp):
             if not eval:
                 with torch.cuda.amp.autocast(wm._use_amp):
@@ -477,7 +477,7 @@ class Dreamer(nn.Module):
                     neg = lx_mlp(unsafe_dataset)
                     
                     
-                    gamma = 0.75
+                    gamma = self._config.gamma_lx
                     lx_loss = (1/pos.size(0))*torch.sum(torch.relu(gamma - pos)) #penalizes safe for being negative
                     lx_loss +=  (1/neg.size(0))*torch.sum(torch.relu(gamma + neg)) # penalizes unsafe for being positive
                     
@@ -541,7 +541,7 @@ def main(config):
     
     action_space = gym.spaces.Discrete(3)
 
-    bounds = np.array([[-1.1, 1.1], [-1.1, 1.1], [0, 2 * np.pi]])
+    bounds = np.array([[config.x_min, config.x_max], [config.y_min, config.y_max], [0, 2 * np.pi]])
     low = bounds[:, 0]
     high = bounds[:, 1]
     midpoint = (low + high) / 2.0
@@ -644,7 +644,7 @@ def main(config):
                 )
                 eval_loss.append(new_loss)
                 logger.image("classifier", np.transpose(eval_plot, (2, 0, 1)))
-                logger.write(step=i+40000)
+                logger.write(step=i+100000)
                 best_pretrain_success_classifier = tools.save_checkpoint(
                     ckpt_name, i, new_loss, best_pretrain_success_classifier, lx_mlp, logdir
                 )
@@ -724,7 +724,9 @@ def main(config):
 
             agent.pretrain_model_only(exp_data, step)'''
     
-    checkpoint = torch.load("/home/kensuke/eais_hw2/dreamerv3-torch/logs/dreamer_dubins/pretrain_joint.pt")
+    print(logdir)
+    print(logdir / "pretrain_joint.pt")
+    checkpoint = torch.load(logdir / "pretrain_joint.pt")
     agent.load_state_dict(checkpoint["agent_state_dict"])
     print('training l(x)')
     lx_mlp, lx_opt = train_lx('classifier', logdir)

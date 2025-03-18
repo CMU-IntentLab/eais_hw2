@@ -62,7 +62,7 @@ def RARL(config):
   updateTimes = config.updateTimes
   updatePeriod = int(maxUpdates / updateTimes)
   updatePeriodHalf = int(updatePeriod / 2)
-  maxSteps = 25
+  maxSteps = config.numT
 
   # == Environment ==
   print("\n== Environment Information ==")
@@ -84,14 +84,14 @@ def RARL(config):
 
   wm = models.WorldModel(env.observation_space, env.action_space, 0, config)
   #checkpoint = torch.load('/home/kensuke/eais_hw2/dreamerv3-torch/logs/dreamer_dubins/pretrain_joint.pt')
-  checkpoint = torch.load('/home/kensuke/latent-safety/logs/dreamer_dubins/1112/142958/best_pretrain_joint_0_10.pt')
+  checkpoint = torch.load('/home/kensuke/eais_hw2/dreamerv3-torch/logs/dreamer_dubins/pretrain_joint.pt')
   wm.dynamics.sample = False
 
   state_dict = {k[14:]:v for k,v in checkpoint['agent_state_dict'].items() if '_wm' in k}
   wm.load_state_dict(state_dict)
   lx_mlp, _ = wm._init_lx_mlp(config, 1)
   #lx_ckpt= torch.load('/home/kensuke/eais_hw2/dreamerv3-torch/logs/dreamer_dubins/best_classifier_0_02.pt')
-  lx_ckpt = torch.load('/home/kensuke/latent-safety/logs/dreamer_dubins/1112/142958/best_classifier_0_01.pt')
+  lx_ckpt = torch.load('/home/kensuke/eais_hw2/dreamerv3-torch/logs/dreamer_dubins/best_classifier_0_02.pt')
   lx_mlp.load_state_dict(lx_ckpt['agent_state_dict'])
   env.car.set_wm(wm, lx_mlp, config)
 
@@ -234,7 +234,7 @@ def RARL(config):
       ACTIVATION=config.actType, GAMMA=config.gamma, GAMMA_PERIOD=updatePeriod,
       GAMMA_END=GAMMA_END, EPS_PERIOD=EPS_PERIOD, EPS_DECAY=0.7,
       EPS_RESET_PERIOD=EPS_RESET_PERIOD, LR_C=config.learningRate,
-      LR_C_PERIOD=updatePeriod, LR_C_DECAY=0.75, MAX_MODEL=50
+      LR_C_PERIOD=updatePeriod, LR_C_DECAY=0.8, MAX_MODEL=50
   )
 
   # == AGENT ==
