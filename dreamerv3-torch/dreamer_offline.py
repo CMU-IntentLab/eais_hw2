@@ -685,7 +685,7 @@ def main(config):
     # ==================== Actor Pretrain ====================
     total_pretrain_steps = config.pretrain_steps 
     print(total_pretrain_steps)
-    '''if total_pretrain_steps > 0:
+    if total_pretrain_steps > 0:
         
         cprint(
             f"Pretraining for {config.pretrain_steps=}",
@@ -722,7 +722,7 @@ def main(config):
     
             exp_data = next(expert_dataset)
 
-            agent.pretrain_model_only(exp_data, step)'''
+            agent.pretrain_model_only(exp_data, step)
     
     print(logdir)
     print(logdir / "pretrain_joint.pt")
@@ -738,7 +738,7 @@ if __name__ == "__main__":
 
     yaml = yaml.YAML(typ="safe", pure=True)
     configs = yaml.load(
-        (pathlib.Path(sys.argv[0]).parent / "configs.yaml").read_text()
+        (pathlib.Path(sys.argv[0]).parent / "../configs.yaml").read_text()
     )
 
     def recursive_update(base, update):
