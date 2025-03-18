@@ -13,7 +13,7 @@ defaults:
   eval_episode_num: 10
   log_every: 1e4
   reset_every: 0
-  device: 'cuda:1'
+  device: 'cuda:0'
   compile: True
   precision: 32
   debug: False
@@ -127,7 +127,7 @@ defaults:
   # num datapts for training encoder, transition, classifier
   num_pts: 5000 # 2000 in paper
 
-  grid_path: /home/kensuke/latent-safety/logs/grid/LS_BRT_v1_w1.25.npy
+  grid_path: LS_BRT_v1_w1.25.npy
   # HJ computation bounds
   x_min: -1.1
   x_max: 1.1

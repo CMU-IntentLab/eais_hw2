@@ -80,7 +80,7 @@ class Experiment(ABC):
                     patch = patches.Circle((0, 0), 0.5, facecolor='None', edgecolor='black') # x,y are coordinates of the center
                     ax.add_patch(patch)
                 elif times[i] == 1.0:
-                    self.plot_grid_values(ax, orientation=zs[j], path='/home/kensuke/latent-safety/logs/grid/LS_BRT_v1_w1.25.npy')
+                    self.plot_grid_values(ax, orientation=zs[j], path='LS_BRT_v1_w1.25.npy')
                 ax.set_xlim([x_min, x_max])
                 ax.set_ylim([y_min, y_max])
                 #fig.colorbar(s) 
