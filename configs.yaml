@@ -19,8 +19,8 @@ defaults:
   debug: False
   video_pred_log: True
 
-  num_exp_trajs: 1900
-  pretrain_steps: 100000
+  num_exp_trajs: 4900 #1900 in paper
+  pretrain_steps: 50000 # 100000 in paper
   
   # Environment
   task: 'dubins'
@@ -127,7 +127,7 @@ defaults:
   # num datapts for training encoder, transition, classifier
   num_pts: 5000 # 2000 in paper
 
-  grid_path: LS_BRT_v1_w1.25.npy
+  grid_path: /home/kensuke/Downloads/LS_BRT_v1_w1.25.npy
   # HJ computation bounds
   x_min: -1.1
   x_max: 1.1
@@ -148,4 +148,5 @@ defaults:
   num_actions: 3
 
   gamma_lx: 0.75
+
 

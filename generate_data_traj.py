@@ -32,7 +32,7 @@ def gen_one_traj_img(x_min, x_max, y_min, y_max, u_max, radius, dt, v, dpi, rand
     states[0] += x_min
     states[1] += y_min 
 
-  states[2] = torch.atan2(-states[1], -states[0]) + np.random.normal(0, 1)
+  states[2] = torch.atan2(-states[1], -states[0]) + np.random.normal(0, 2) # np.random.normal(0, 1) this is what is in paper
   if states[2] < 0: 
     states[2] += 2*np.pi
   if states[2] > 2*np.pi: 
@@ -125,7 +125,7 @@ if __name__=='__main__':
 
     yaml = yaml.YAML(typ="safe", pure=True)
     configs = yaml.load(
-        (pathlib.Path(sys.argv[0]).parent / "./dreamerv3-torch/configs.yaml").read_text()
+        (pathlib.Path(sys.argv[0]).parent / "./configs.yaml").read_text()
     )
 
     name_list = ["defaults"]

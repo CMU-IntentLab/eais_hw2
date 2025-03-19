@@ -431,6 +431,7 @@ class DubinsCarLatentDyn(object):
     feat = self.wm.dynamics.get_feat(s).detach()
     with torch.no_grad():  # Disable gradient calculation
       outputs = self.MLP_margin(feat)
+      outputs = torch.tanh(outputs)
       g_xList.append(outputs.detach().cpu().numpy())
    
     safety_margin = np.array(g_xList).squeeze()

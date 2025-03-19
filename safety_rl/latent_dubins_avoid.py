@@ -83,13 +83,13 @@ def RARL(config):
     fn = fn + '-' + timestr
 
   wm = models.WorldModel(env.observation_space, env.action_space, 0, config)
-  checkpoint = torch.load('best_pretrain_joint_0_10.pt')
+  checkpoint = torch.load('/home/kensuke/eais_hw2/dreamerv3-torch/logs/dreamer_dubins/pretrain_joint.pt')
   wm.dynamics.sample = False
 
   state_dict = {k[14:]:v for k,v in checkpoint['agent_state_dict'].items() if '_wm' in k}
   wm.load_state_dict(state_dict)
   lx_mlp, _ = wm._init_lx_mlp(config, 1)
-  lx_ckpt = torch.load('best_classifier_0_01.pt')
+  lx_ckpt = torch.load('/home/kensuke/eais_hw2/dreamerv3-torch/logs/dreamer_dubins/classifier.pt')
   lx_mlp.load_state_dict(lx_ckpt['agent_state_dict'])
   env.car.set_wm(wm, lx_mlp, config)
 
@@ -401,7 +401,7 @@ if __name__ == "__main__":
 
     yaml = yaml.YAML(typ="safe", pure=True)
     configs = yaml.load(
-        (pathlib.Path(sys.argv[0]).parent / "../dreamerv3-torch/configs.yaml").read_text()
+        (pathlib.Path(sys.argv[0]).parent / "../configs.yaml").read_text()
     )
 
     name_list = ["defaults", *config.configs] if config.configs else ["defaults"]
